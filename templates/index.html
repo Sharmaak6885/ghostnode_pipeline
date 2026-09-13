@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GhostNode | Bulk Email Marketing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --bg-body: #F3F4F6;
+            --bg-surface: #FFFFFF;
+            --text-main: #111827;
+            --text-muted: #6B7280;
+            --border-color: #E5E7EB;
+            --success: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); display: flex; min-height: 100vh; }
+        
+        .sidebar { width: 260px; background-color: var(--bg-surface); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 24px 0; position: fixed; height: 100vh; overflow-y: auto; }
+        .brand { font-size: 20px; font-weight: 700; color: var(--text-main); padding: 0 24px; margin-bottom: 40px; display: flex; align-items: center; gap: 12px; }
+        .brand img { width: 32px; height: 32px; border-radius: 8px; }
+        
+        .nav-links { display: flex; flex-direction: column; gap: 4px; padding: 0 16px; }
+        .nav-item { padding: 10px 16px; border-radius: 8px; color: var(--text-muted); font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: all 0.2s ease; }
+        .nav-item:hover { background-color: #F9FAFB; color: var(--text-main); }
+        .nav-item.active { background-color: #EEF2FF; color: var(--primary); }
+        
+        .main-content { flex: 1; margin-left: 260px; display: flex; flex-direction: column; }
+        .topbar { height: 72px; background-color: var(--bg-surface); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 40px; }
+        .page-title { font-size: 20px; font-weight: 600; }
+        .global-controls { display: flex; align-items: center; gap: 24px; }
+        .toggle-group { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; color: var(--text-muted); }
+        
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #D1D5DB; transition: .3s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(20px); }
+        
+        .btn-outline { padding: 8px 16px; border: 1px solid var(--border-color); border-radius: 6px; background: white; color: var(--text-main); font-weight: 500; font-size: 14px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
+        .btn-outline:hover { background-color: #F9FAFB; }
+        
+        .content-area { padding: 40px; max-width: 1200px; width: 100%; margin: 0 auto; }
+        .panel-content { display: none; }
+        .panel-content.active { display: block; animation: fadeIn 0.3s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .card { background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; padding: 32px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); margin-bottom: 24px; }
+        .card-header { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border-color); }
+        .card-title { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+        .card-subtitle { font-size: 14px; color: var(--text-muted); }
+        
+        .flex-row { display: flex; gap: 24px; margin-bottom: 20px; }
+        .flex-row > * { flex: 1; }
+        
+        .input-group { display: flex; flex-direction: column; gap: 8px; }
+        .input-group label { font-size: 14px; font-weight: 500; color: var(--text-main); }
+        input[type="text"], input[type="file"], select, input[type="range"] { padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; color: var(--text-main); outline: none; transition: border-color 0.2s; width: 100%; }
+        input[type="text"]:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        
+        .btn-primary { width: 100%; padding: 12px 24px; background-color: var(--primary); color: white; font-weight: 500; font-size: 15px; border: none; border-radius: 6px; cursor: pointer; transition: background-color 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
+        
+        #status-alert { margin-bottom: 24px; padding: 16px; border-radius: 8px; font-size: 14px; font-weight: 500; display: none; }
+        .alert-info { background-color: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
+        .alert-success { background-color: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; }
+        .alert-error { background-color: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA; }
+        .alert-warning { background-color: #FFFBEB; color: #B45309; border: 1px solid #FDE68A; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        .stat-card { background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .stat-header { display: flex; align-items: center; justify-content: space-between; }
+        .stat-icon { padding: 8px; border-radius: 8px; }
+        .stat-icon.primary { background-color: #EEF2FF; color: var(--primary); }
+        .stat-icon.success { background-color: #ECFDF5; color: var(--success); }
+        .stat-icon.warning { background-color: #FFFBEB; color: var(--warning); }
+        .stat-icon.danger { background-color: #FEF2F2; color: var(--danger); }
+        .stat-label { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+        .stat-number { font-size: 32px; font-weight: 700; color: var(--text-main); }
+        
+        /* Table Styles */
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+        th, td { padding: 12px 16px; border-bottom: 1px solid var(--border-color); }
+        th { background-color: #F9FAFB; color: var(--text-muted); font-weight: 500; }
+        
+        /* Email Preview styles */
+        .preview-box { border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; background-color: #fff; min-height: 250px; }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="brand">
+            <img src="/static/img/logo.jpg" alt="GhostNode Logo">
+            GhostNode
+        </div>
+        <div class="nav-links">
+            <div class="nav-item active" onclick="switchTab('lead-generation', 'Lead Generation', this)">
+                <i data-feather="users"></i> Lead Generation
+            </div>
+            <div class="nav-item" onclick="switchTab('campaigns', 'Email Campaigns', this); updatePreview();">
+                <i data-feather="mail"></i> Email Campaigns
+            </div>
+            <div class="nav-item" onclick="switchTab('analytics', 'Analytics Dashboard', this); loadStats();">
+                <i data-feather="bar-chart-2"></i> Analytics
+            </div>
+            <div class="nav-item" onclick="switchTab('history', 'Campaign History', this); loadHistory();">
+                <i data-feather="clock"></i> History
+            </div>
+            <div class="nav-item" onclick="switchTab('settings', 'Sender Settings', this); loadSettings();">
+                <i data-feather="settings"></i> Settings
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="page-title" id="page-title">Lead Generation</div>
+            <div class="global-controls">
+                <div class="toggle-group">
+                    Automated Sending
+                    <label class="switch" for="smtpToggle">
+                        <input type="checkbox" id="smtpToggle" aria-label="Toggle Automated Sending" onchange="toggleSMTP()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <button class="btn-outline" onclick="exportCSV()">
+                    <i data-feather="download" style="width: 16px; height: 16px;"></i> Export Data
+                </button>
+            </div>
+        </header>
+
+        <div class="content-area">
+            <div id="status-alert" class="alert-info">Ready to process requests.</div>
+
+            <!-- LEAD GENERATION -->
+            <div id="lead-generation-panel" class="panel-content active">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Target Audience</h2>
+                        <p class="card-subtitle">Define the industry and role to scrape high-quality leads.</p>
+                    </div>
+                    <div class="flex-row">
+                        <div class="input-group">
+                            <label for="targetRole">Target Role</label>
+                            <input type="text" id="targetRole" placeholder="e.g., Marketing Manager, CTO">
+                        </div>
+                        <div class="input-group">
+                            <label for="targetIndustry">Industry</label>
+                            <input type="text" id="targetIndustry" placeholder="e.g., SaaS, Real Estate">
+                        </div>
+                    </div>
+                    <div class="flex-row" style="margin-bottom: 24px;">
+                        <div class="input-group">
+                            <label for="minConfidence">Minimum Confidence Score: <span id="confValue">70</span>%</label>
+                            <input type="range" id="minConfidence" min="0" max="100" value="70" oninput="document.getElementById('confValue').innerText = this.value">
+                        </div>
+                    </div>
+                    <button class="btn-primary" id="generateBtn" onclick="generateLeads()">
+                        <i data-feather="search" style="width: 18px;"></i> Find Targeted Leads
+                    </button>
+                </div>
+            </div>
+
+            <!-- CAMPAIGNS -->
+            <div id="campaigns-panel" class="panel-content">
+                <div class="flex-row" style="align-items: flex-start;">
+                    <!-- Setup -->
+                    <div class="card" style="flex: 1;">
+                        <div class="card-header">
+                            <h2 class="card-title">Campaign Setup</h2>
+                        </div>
+                        <div class="input-group" style="margin-bottom:16px;">
+                            <label for="templateSelect">Email Template</label>
+                            <select id="templateSelect" onchange="updatePreview()">
+                                <option value="ai_preset">Personalized Pitch (Dynamic)</option>
+                                <option value="preset_1">Standard Professional Outreach</option>
+                            </select>
+                        </div>
+                        
+                        <div class="input-group" style="margin-bottom:16px;">
+                            <label for="subjectA">Subject Line A</label>
+                            <input type="text" id="subjectA" value="Quick question about {owner_name}" placeholder="e.g., Partnering with {owner_name}">
+                        </div>
+                        <div class="input-group" style="margin-bottom:16px;">
+                            <label for="subjectB">Subject Line B (Optional A/B Testing)</label>
+                            <input type="text" id="subjectB" placeholder="Alternative subject for A/B testing">
+                        </div>
+
+                        <div class="input-group" style="margin-bottom:16px;">
+                            <label for="productPitch">Product / Service Description</label>
+                            <input type="text" id="productPitch" placeholder="premium enterprise software" value="premium enterprise software" onkeyup="updatePreview()">
+                        </div>
+                        <div class="input-group" style="margin-bottom:16px;">
+                            <label for="csvUpload">Custom Contact List (.CSV)</label>
+                            <input type="file" id="csvUpload" accept=".csv">
+                        </div>
+                        <div class="input-group" style="margin-bottom:24px;">
+                            <label for="pdfUpload">Marketing Asset (.PDF)</label>
+                            <input type="file" id="pdfUpload" accept=".pdf">
+                        </div>
+                        <button class="btn-primary" id="deployBtn" onclick="startCampaign()">
+                            <i data-feather="send" style="width: 18px;"></i> Execute Campaign
+                        </button>
+                    </div>
+
+                    <!-- Live Preview -->
+                    <div class="card" style="flex: 1;">
+                        <div class="card-header">
+                            <h2 class="card-title">Live Preview</h2>
+                        </div>
+                        <div class="preview-box" id="emailPreview">
+                            <!-- Preview injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ANALYTICS -->
+            <div id="analytics-panel" class="panel-content">
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-header"><div class="stat-label">Total Sent</div><div class="stat-icon primary"><i data-feather="mail"></i></div></div><div class="stat-number" id="stat-sent">0</div></div>
+                    <div class="stat-card"><div class="stat-header"><div class="stat-label">Verified Opens</div><div class="stat-icon success"><i data-feather="eye"></i></div></div><div class="stat-number" id="stat-opened">0</div></div>
+                    <div class="stat-card"><div class="stat-header"><div class="stat-label">Bounces</div><div class="stat-icon warning"><i data-feather="alert-circle"></i></div></div><div class="stat-number" id="stat-bounced">0</div></div>
+                    <div class="stat-card"><div class="stat-header"><div class="stat-label">Opt-Outs</div><div class="stat-icon danger"><i data-feather="user-minus"></i></div></div><div class="stat-number" id="stat-unsubscribed">0</div></div>
+                </div>
+                <button class="btn-outline" onclick="loadStats()" style="margin-top: 24px;">
+                    <i data-feather="refresh-cw" style="width: 16px; height: 16px;"></i> Refresh Data
+                </button>
+            </div>
+
+            <!-- CAMPAIGN HISTORY -->
+            <div id="history-panel" class="panel-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Campaign History</h2>
+                        <p class="card-subtitle">Log of all previously executed bulk deployments.</p>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Template</th>
+                                    <th>Subject</th>
+                                    <th>Emails Sent</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SETTINGS -->
+            <div id="settings-panel" class="panel-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Sender Profile</h2>
+                        <p class="card-subtitle">Manage how you appear in recipients' inboxes.</p>
+                    </div>
+                    <div class="flex-row">
+                        <div class="input-group">
+                            <label for="senderName">Sender Name</label>
+                            <input type="text" id="senderName" placeholder="e.g. John Doe">
+                        </div>
+                        <div class="input-group">
+                            <label for="replyTo">Reply-To Email</label>
+                            <input type="text" id="replyTo" placeholder="e.g. hello@mycompany.com">
+                        </div>
+                    </div>
+                    <button class="btn-primary" onclick="saveSettings()" style="width:auto; margin-top: 12px;">
+                        <i data-feather="save" style="width: 18px;"></i> Save Settings
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        feather.replace();
+
+        function switchTab(panelId, title, element) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            document.getElementById('page-title').innerText = title;
+            document.querySelectorAll('.panel-content').forEach(panel => panel.classList.remove('active'));
+            document.getElementById(panelId + '-panel').classList.add('active');
+            document.getElementById('status-alert').style.display = 'none';
+        }
+
+        function showAlert(msg, type = "info") {
+            const alertBox = document.getElementById('status-alert');
+            alertBox.style.display = 'block';
+            alertBox.className = `alert-${type}`;
+            let icon = type === 'success' ? 'check-circle' : (type === 'error' ? 'x-circle' : 'info');
+            alertBox.innerHTML = `<div style="display:flex; align-items:center; gap:8px;"><i data-feather="${icon}" style="width:18px;"></i> ${msg}</div>`;
+            feather.replace();
+        }
+
+        function exportCSV() {
+            window.location.href = '/api/export-csv';
+            showAlert("Export triggered.", "info");
+        }
+
+        async function toggleSMTP() {
+            const active = document.getElementById('smtpToggle').checked;
+            await fetch('/api/toggle-smtp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ active }) });
+            showAlert(active ? "Automated Sending Enabled." : "Automated Sending Disabled.", active ? "success" : "info");
+        }
+
+        async function loadStats() {
+            const res = await fetch('/api/stats');
+            const data = await res.json();
+            document.getElementById('stat-sent').innerText = data.sent || 0;
+            document.getElementById('stat-opened').innerText = data.opened || 0;
+            document.getElementById('stat-bounced').innerText = data.bounced || 0;
+            document.getElementById('stat-unsubscribed').innerText = data.unsubscribed || 0;
+        }
+
+        async function loadHistory() {
+            const res = await fetch('/api/campaign-history');
+            const data = await res.json();
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = '';
+            if(data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4">No campaigns run yet.</td></tr>';
+            } else {
+                data.reverse().forEach(row => {
+                    tbody.innerHTML += `<tr><td>${row.date}</td><td>${row.template}</td><td>${row.subject}</td><td>${row.sent}</td></tr>`;
+                });
+            }
+        }
+
+        let currentSettings = { sender_name: "GhostNode Admin" };
+        async function loadSettings() {
+            const res = await fetch('/api/settings');
+            currentSettings = await res.json();
+            document.getElementById('senderName').value = currentSettings.sender_name || '';
+            document.getElementById('replyTo').value = currentSettings.reply_to || '';
+        }
+
+        async function saveSettings() {
+            const sender_name = document.getElementById('senderName').value;
+            const reply_to = document.getElementById('replyTo').value;
+            const res = await fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sender_name, reply_to }) });
+            if(res.ok) {
+                currentSettings = { sender_name, reply_to };
+                showAlert("Settings saved successfully.", "success");
+            }
+        }
+
+        // Init on load
+        loadSettings();
+
+        function updatePreview() {
+            const template = document.getElementById('templateSelect').value;
+            const pitch = document.getElementById('productPitch').value || '[Your product pitch here]';
+            const sName = currentSettings.sender_name || 'Your Name';
+            const box = document.getElementById('emailPreview');
+            
+            if (template === 'ai_preset') {
+                box.innerHTML = `
+                    <div style="font-family: 'Inter', sans-serif; color: #1a1a1a; line-height: 1.6;">
+                        <p>Hey <strong>[Target Company]</strong> team,</p>
+                        <p>I'll keep this quick. I've been checking out the space you guys are building, and the energy is top-tier.</p>
+                        <p>We supply <strong>${pitch}</strong>. I think it would be a massive value-add for your current operations.</p>
+                        <p>I've dropped our info below. No pressure, but if you're open to exploring an upgrade, let's chat.</p>
+                        <p>Best,<br><strong>${sName}</strong></p>
+                    </div>`;
+            } else {
+                box.innerHTML = `
+                    <div style="font-family: 'Inter', sans-serif; color: #1a1a1a;">
+                        <p>Hey <strong>[Target Name]</strong>,</p>
+                        <p>Just reaching out to drop our latest information regarding <strong>${pitch}</strong>.</p>
+                        <p>We curate our solutions specifically for active teams looking to upgrade their pipeline. Feel free to check out the attached PDF.</p>
+                        <p>Let me know if anything catches your eye!</p>
+                        <p>Cheers,<br><strong>${sName}</strong></p>
+                    </div>`;
+            }
+        }
+
+        async function generateLeads() {
+            const role = document.getElementById('targetRole').value;
+            const industry = document.getElementById('targetIndustry').value;
+            const conf = document.getElementById('minConfidence').value;
+            const btn = document.getElementById('generateBtn');
+
+            if (!role || !industry) return showAlert("Enter Target Role and Industry.", "error");
+
+            btn.innerHTML = `<i data-feather="loader" class="spin" style="width:18px;"></i> Searching...`; feather.replace(); btn.disabled = true;
+            
+            const formData = new FormData();
+            formData.append('role', role); formData.append('industry', industry); formData.append('min_confidence', conf);
+
+            try {
+                const res = await fetch('/generate-leads', { method: 'POST', body: formData });
+                const result = await res.json();
+                showAlert(result.message, res.ok ? "success" : "error");
+            } catch (e) {
+                showAlert("Network error.", "error");
+            } finally {
+                btn.innerHTML = `<i data-feather="search" style="width: 18px;"></i> Find Targeted Leads`; feather.replace(); btn.disabled = false;
+            }
+        }
+
+        async function startCampaign() {
+            const btn = document.getElementById('deployBtn');
+            btn.innerHTML = `<i data-feather="loader" class="spin" style="width:18px;"></i> Executing...`; feather.replace(); btn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('template_type', document.getElementById('templateSelect').value);
+            formData.append('product_pitch', document.getElementById('productPitch').value);
+            formData.append('subject_a', document.getElementById('subjectA').value);
+            formData.append('subject_b', document.getElementById('subjectB').value);
+            
+            if (document.getElementById('csvUpload').files[0]) formData.append('csv_file', document.getElementById('csvUpload').files[0]);
+            if (document.getElementById('pdfUpload').files[0]) formData.append('pdf_file', document.getElementById('pdfUpload').files[0]);
+
+            try {
+                const res = await fetch('/launch-campaign', { method: 'POST', body: formData });
+                const result = await res.json();
+                showAlert(result.message, result.status === 'success' ? "success" : "error");
+                loadStats();
+            } catch (e) {
+                showAlert("Error connecting to server.", "error");
+            } finally {
+                btn.innerHTML = `<i data-feather="send" style="width: 18px;"></i> Execute Campaign`; feather.replace(); btn.disabled = false;
+            }
+        }
+    </script>
+    <style>.spin { animation: spin 2s linear infinite; } @keyframes spin { 100% { transform: rotate(360deg); } }</style>
+</body>
+</html>
